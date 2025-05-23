@@ -21,7 +21,7 @@ except ImportError:
 import time
 
 import matplotlib.pyplot as plt
-    
+from mpl_toolkits.axes_grid1 import make_axes_locatable    
 #%%
 """
 ### Parameters
@@ -488,16 +488,34 @@ Int_D *=  norm_Int_D0
 """
 plt.figure(0)
 plt.clf()
-plt.subplot(121)
-plt.imshow(Pupil2d)
-plt.subplot(122)
-plt.imshow(Apod2d)
+fig, (ax1,ax2) = plt.subplots(1,2)
+im1 = ax1.imshow(Pupil2d)
+divider = make_axes_locatable(ax1)
+cax = divider.append_axes('right', size='5%', pad=0.05)
+fig.colorbar(im1, cax=cax, orientation='vertical')
+
+im2 = ax2.imshow(Apod2d)
+divider = make_axes_locatable(ax2)
+cax = divider.append_axes('right', size='5%', pad=0.05)
+fig.colorbar(im2, cax=cax, orientation='vertical')
+fig.tight_layout()
+plt.savefig('Figure1.png')
 
 #%%
 plt.figure(1)
 plt.clf()
-plt.subplot(121)
-plt.imshow(np.log10(Int_D0), vmin=vmin0, vmax=vmax0)
-plt.subplot(122)
-plt.imshow(np.log10(Int_D), vmin=vmin0, vmax=vmax0)
+fig, (ax1,ax2) = plt.subplots(1,2)
+
+im1 = ax1.imshow(np.log10(Int_D0), vmin=vmin0, vmax=vmax0)
+divider = make_axes_locatable(ax1)
+cax = divider.append_axes('right', size='5%', pad=0.05)
+fig.colorbar(im1, cax=cax, orientation='vertical')
+
+im2 = ax2.imshow(np.log10(Int_D), vmin=vmin0, vmax=vmax0)
+divider = make_axes_locatable(ax2)
+cax = divider.append_axes('right', size='5%', pad=0.05)
+fig.colorbar(im2, cax=cax, orientation='vertical')
+
+fig.tight_layout()
+plt.savefig('Figure2.png')
 
