@@ -71,7 +71,9 @@ class Coronograph:
 
         ### Entrance pupil
         self.Pupil2d = uniform_disk(self.nPup, self.nPup/2., CtrBtwnPix=self.CtrBtwnPix)-uniform_disk(self.nPup, self.ID*self.nPup/2., CtrBtwnPix=self.CtrBtwnPix)
-        self.Pupil2d_qrt = self.Pupil2d[self.nPup//2:,self.nPup//2:]      
+        self.Pupil2d_qrt = self.Pupil2d[self.nPup//2:,self.nPup//2:]
+        self.TR = np.sum(self.Pupil2d_qrt)
+        self.idx_out2d_qrt = self.Pupil2d_qrt == 0.0      
 
         ### Focal plane mask
         self.mask2d = uniform_disk(self.nFPM, self.nFPM/2., CtrBtwnPix=self.CtrBtwnPix)
@@ -81,6 +83,7 @@ class Coronograph:
         self.LyotStop2d = uniform_disk(self.nPup, self.nPup/2., CtrBtwnPix=self.CtrBtwnPix)-uniform_disk(self.nPup, self.ID*self.nPup/2., CtrBtwnPix=self.CtrBtwnPix)
         self.LyotStop2d_qrt = self.LyotStop2d[self.nPup//2:,self.nPup//2:]
 
+        # Select pixels in pupil and image planes for optimization purposes
 
 
 def compute_corono_field_2d_qrt(Apod2d_qrt, Pupil2d_qrt, LyotStop2d_qrt, mask2d_qrt):
