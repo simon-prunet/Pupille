@@ -1,0 +1,65 @@
+import numpy as np
+import shapely
+import shapely.geometry as geom
+from shapely.ops import unary_union
+from shapely.geometry import Polygon
+args = {'circular_resolution': 360, 'pupil_diameter': 800, 'obscuration_diameter': 110, 'spider_width': 50, 'spider_angle': 45.0,
+        'offset_x': 20.0}
+
+class PupilGeometry:
+    def __init__(self, **kwargs):
+        self.pupil_diameter = kwargs.get('pupil_diameter', 800)
+        self.obscuration_diameter = kwargs.get('obscuration_diameter', 110)
+        self.spider_width = kwargs.get('spider_width', 50)
+        self.spider_angle = kwargs.get('spider_angle', 45.0)
+        self.offset_x = kwargs.get('offset_x', 20.0)
+        self.circular_resolution = kwargs.get('circular_resolution', 360)
+        self.num_spiders = 4
+        self.horizontal_offset = self.offset_x * np.array([1, -1, -1, 1])
+        
+    def create_pupil(self):
+        outer_circle = geom.Point(0, 0).buffer(self.pupil_diameter / 2, resolution=self.circular_resolution)
+        if self.obscuration_diameter > 0:
+            inner_circle = geom.Point(0, 0).buffer(self.obscuration_diameter / 2, resolution=self.circular_resolution)
+            pupil_shape = outer_circle.difference(inner_circle) 
+        else:
+            pupil_shape = outer_circle
+
+        if self.num_spiders > 0 and self.spider_width > 0:
+            spiders = []
+            angle_between_spiders = 360 / self.num_spiders
+            for i in range(self.num_spiders):
+                angle = self.spider_angle + i * angle_between_spiders
+                x_offset = self.horizontal_offset[i]
+
+                spider = Polygon([
+                    (x_offset, -self.spider_width / 2),
+                    (x_offset + self.pupil_diameter / 2 + 10, -self.spider_width / 2),
+                    (x_offset + self.pupil_diameter / 2 + 10, self.spider_width / 2),
+                    (x_offset, self.spider_width / 2)
+                ])
+                spider = shapely.affinity.rotate(spider, angle, origin=(x_offset,0))
+                spiders.append(spider)
+
+            spiders_union = unary_union(spiders)
+            pupil_shape = pupil_shape.difference(spiders_union)
+        return pupil_shape
+
+    def get_area(self):
+        pupil_shape = self.create_pupil()
+        return pupil_shape.area
+
+    def get_perimeter(self):
+        pupil_shape = self.create_pupil()
+        return pupil_shape.length
+    def plot_pupil(self):
+        import matplotlib.pyplot as plt
+        pupil_shape = self.create_pupil()
+        x, y = pupil_shape.exterior.xy
+        plt.figure(figsize=(6,6))
+        plt.fill(x, y, color='black')
+        plt.xlim(-self.pupil_diameter/2 - 50, self.pupil_diameter/2 + 50)
+        plt.ylim(-self.pupil_diameter/2 - 50, self.pupil_diameter/2 + 50)
+        plt.gca().set_aspect('equal', adjustable='box')
+        plt.title('Pupil Geometry')
+        plt.show()
