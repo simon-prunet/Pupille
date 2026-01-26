@@ -18,7 +18,10 @@ class PupilGeometry:
         self.x_offset = kwargs.get('x_offset', 111.0/2)
         self.circular_resolution = kwargs.get('circular_resolution', 360)
         self.horizontal_offset = self.x_offset * np.array([1, -1, -1, 1])
-        
+        self.shear = kwargs.get('shear', False)
+        self.shear_angle = kwargs.get('shear_angle', 0.0)
+        self.shear_coeffs = kwargs.get('shear_coeffs', (1, 1))
+
     def create_pupil(self):
         outer_circle = Point(0, 0).buffer(self.pupil_diameter / 2, resolution=self.circular_resolution)
         if self.obscuration_diameter > 0:
@@ -45,6 +48,12 @@ class PupilGeometry:
 
             spiders_union = unary_union(spiders)
             pupil_shape = pupil_shape.difference(spiders_union)
+        if (self.shear):
+            rotmat = rotation_matrix(np.radians(self.shear_angle))
+            invrotmat = rotation_matrix(np.radians(-self.shear_angle))
+            shear_matrix = rotmat@np.array([[self.shear_coeffs[0], 0],[0, self.shear_coeffs[1]]])@invrotmat
+            print(shear_matrix)
+            pupil_shape = shapely.affinity.affine_transform(pupil_shape, [shear_matrix[0,0], shear_matrix[0,1], shear_matrix[1,0], shear_matrix[1,1], 0, 0])
         return pupil_shape
 
     def get_area(self):
@@ -89,3 +98,8 @@ class PupilGeometry:
                     pixel_weights[i, j] = 0.0
         return x, y, pixel_weights
     
+def rotation_matrix(theta):
+    """Create a 2D rotation matrix for angle theta (in radians)."""
+    return np.array([[np.cos(theta), -np.sin(theta)],
+                     [np.sin(theta),  np.cos(theta)]])  
+
